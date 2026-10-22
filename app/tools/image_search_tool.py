@@ -32,7 +32,7 @@ def ddg_image_search(query: str, max_results: int = None) -> list[dict]:
     try:
         from ddgs import DDGS
 
-        with DDGS() as ddgs:
+        with DDGS(timeout=30) as ddgs:
             # Gọi positional cho `query` vì các phiên bản ddgs đặt tên tham số đầu khác nhau
             # (query/keywords). region/safesearch/max_results giữ ổn định.
             raw = ddgs.images(

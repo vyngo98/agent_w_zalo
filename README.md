@@ -12,6 +12,11 @@ An AI-powered conversational agent integrated with **Zalo Bot API** using Long P
 - **Image Handling:** Supports collecting image search results for downstream processing and delivery.
 - **Tool Call Limits:** Limits tool executions per request to reduce unnecessary repeated searches.
 
+
+## Video demo
+<video src="video_demo/agent_zalo.mp4" width="600" controls></video>
+
+
 ## Architecture
 
 ```text

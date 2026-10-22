@@ -13,34 +13,34 @@ from app.tools.image_search_tool import search_images
 from app.tools.web_search_tool import search_webs
 from app.prompts.system_prompt import SYSTEM_PROMPT
 
-from app.middlewares.tool_error_handling_middleware import build_lead_runtime_middlewares
-from app.middlewares.clarification_middleware import ClarificationMiddleware
-
-load_dotenv()
-
-def _build_middlewares(config: RunnableConfig, model_name: str | None, agent_name: str | None = None, custom_middlewares: list[AgentMiddleware] | None = None):
-    """Build middleware chain based on runtime configuration.
-
-    Args:
-        config: Runtime configuration containing configurable options like is_plan_mode.
-        agent_name: If provided, MemoryMiddleware will use per-agent memory storage.
-        custom_middlewares: Optional list of custom middlewares to inject into the chain.
-
-    Returns:
-        List of middleware instances.
-    """
-    middlewares = build_lead_runtime_middlewares(lazy_init=True)
-
-    # Add summarization middleware if enabled
-    summarization_middleware = _create_summarization_middleware()
-    if summarization_middleware is not None:
-        middlewares.append(summarization_middleware)
-
-    # Add MemoryMiddleware (after TitleMiddleware)
-    middlewares.append(MemoryMiddleware(agent_name=agent_name))
-
-    # ClarificationMiddleware should always be last
-    middlewares.append(ClarificationMiddleware())
+# from app.middlewares.tool_error_handling_middleware import build_lead_runtime_middlewares
+# from app.middlewares.clarification_middleware import ClarificationMiddleware
+#
+# load_dotenv()
+#
+# def _build_middlewares(config: RunnableConfig, model_name: str | None, agent_name: str | None = None, custom_middlewares: list[AgentMiddleware] | None = None):
+#     """Build middleware chain based on runtime configuration.
+#
+#     Args:
+#         config: Runtime configuration containing configurable options like is_plan_mode.
+#         agent_name: If provided, MemoryMiddleware will use per-agent memory storage.
+#         custom_middlewares: Optional list of custom middlewares to inject into the chain.
+#
+#     Returns:
+#         List of middleware instances.
+#     """
+#     middlewares = build_lead_runtime_middlewares(lazy_init=True)
+#
+#     # Add summarization middleware if enabled
+#     summarization_middleware = _create_summarization_middleware()
+#     if summarization_middleware is not None:
+#         middlewares.append(summarization_middleware)
+#
+#     # Add MemoryMiddleware (after TitleMiddleware)
+#     middlewares.append(MemoryMiddleware(agent_name=agent_name))
+#
+#     # ClarificationMiddleware should always be last
+#     middlewares.append(ClarificationMiddleware())
 
 def create_custom_agent():
     # temperature=0 giữ model ổn định/ít lan man -> hạn chế gọi lại tool một cách vô ích.
