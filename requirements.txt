@@ -4,7 +4,6 @@ langchain_core==1.6.13
 langchain_openai==1.7.2
 langchain_tavily==0.2.18
 langgraph==1.2.16
-Pillow==13.0.0
-protobuf==7.36.2
 pydantic==2.14.1
 python-dotenv==1.2.4
+langfuse==5.0.4

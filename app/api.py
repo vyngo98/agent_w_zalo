@@ -31,6 +31,7 @@ from app.observability import (
     now_iso,
     write_request_log,
 )
+from app.tracing import get_langfuse_handler
 # from app.semantic_cache import get_semantic_cache
 
 logger = logging.getLogger(__name__)
@@ -119,21 +120,37 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
         {"role": m["role"], "content": m["content"]}
         for m in session["messages"]
     ]
-
     # Collect retrieval citations from the RAG tool (via a per-request sink)
     # so the UI can show which pages/tables the answer drew from. `log_sink`
     # carries observability data (e.g. prompt template) back from the graph.
     sources_sink: list = []
     images_sink: list = []
     log_sink: dict = {}
+
+    # Langfuse tracing (tùy chọn). None nếu tắt/chưa cài -> callbacks rỗng, chạy bình thường.
+    # metadata: gom trace theo session Zalo và gắn user/tags cho dễ lọc trên Langfuse.
+    callbacks = []
+    lf_handler = get_langfuse_handler()
+    if lf_handler is not None:
+        callbacks.append(lf_handler)
+
     try:
         result = agent.invoke(
             {"messages": history},
-            config={"configurable": {
-                "sources_sink": sources_sink,
-                "images_sink": images_sink,
-                "log_sink": log_sink,
-            }},
+            config={
+                "callbacks": callbacks,
+                "run_name": "zalo_agent",
+                "metadata": {
+                    "langfuse_session_id": session_id,
+                    "langfuse_user_id": session_id,
+                    "langfuse_tags": ["zalo-agent", f"prompt:{PROMPT_VERSION}"],
+                },
+                "configurable": {
+                    "sources_sink": sources_sink,
+                    "images_sink": images_sink,
+                    "log_sink": log_sink,
+                },
+            },
         )
     except Exception as e:  # noqa: BLE001 - log the failure, degrade gracefully
         latency_ms = (time.perf_counter() - t0) * 1000.0

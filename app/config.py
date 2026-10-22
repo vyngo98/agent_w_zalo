@@ -31,3 +31,10 @@ LLM_MODEL = os.getenv(
     "LLM_MODEL",
     "gemini-3.8-flash-high"
 )
+
+# Langfuse tracing (tùy chọn). Thiếu key hoặc chưa cài gói -> tracing tự tắt, không ảnh hưởng
+# pipeline. Gói langfuse đọc trực tiếp các biến LANGFUSE_* từ môi trường (đã nạp qua .env).
+LANGFUSE_ENABLED = os.getenv("LANGFUSE_ENABLED", "1") not in ("0", "false", "False", "")
+LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY", "")
+LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY", "")
+LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
