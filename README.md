@@ -14,7 +14,7 @@ An AI-powered conversational agent integrated with **Zalo Bot API** using Long P
 
 
 ## Video demo
-<video src="video_demo/agent_zalo.mp4" width="600" controls></video>
+![Demo](video_demo/agent_zalo.mp4)
 
 
 ## Architecture
