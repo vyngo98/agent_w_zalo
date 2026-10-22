@@ -101,23 +101,6 @@ class ZaloBotClient:
 # Định dạng trả lời
 # --------------------------------------------------------------------------- #
 
-_CONTENT_TYPE_VI = {"table": "bảng", "text": "văn bản"}
-
-
-def format_reply(message: dict) -> str:
-    """Ghép nội dung trả lời + dòng trích dẫn trang từ `message["sources"]`."""
-    content = (message or {}).get("content") or ""
-    sources = (message or {}).get("sources") or []
-    if not sources:
-        return content
-    parts = []
-    for s in sources:
-        page = s.get("page", "?")
-        kind = _CONTENT_TYPE_VI.get(s.get("content_type"), s.get("content_type") or "")
-        parts.append(f"trang {page}" + (f" ({kind})" if kind else ""))
-    return content + "\n\n📄 Nguồn: " + ", ".join(parts)
-
-
 def chunk_text(text: str, limit: int = ZALO_TEXT_LIMIT) -> list[str]:
     """Chia `text` thành các phần ≤ limit ký tự, ưu tiên cắt ở ranh giới dòng."""
     text = text or ""
