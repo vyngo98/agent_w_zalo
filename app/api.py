@@ -1,6 +1,5 @@
-import json
 import logging
-import os
+import re
 import time
 import uuid
 
@@ -43,6 +42,17 @@ zalo_client = ZaloBotClient()
 
 class MessageRequest(BaseModel):
     content: str
+
+
+def clean_markdown(text):
+    # Xóa các ký tự in đậm/in nghiêng như **, *, __, _
+    text = re.sub(r'(\*\*|__)(.*?)\1', r'\2', text)
+    text = re.sub(r'(\*|_)(.*?)\1', r'\2', text)
+    # Xóa các ký tự tiêu đề #, ##, ### ở đầu dòng
+    text = re.sub(r'^#+\s+', '', text, flags=re.MULTILINE)
+    # Xóa định dạng khối mã code ```
+    text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+    return text
 
 
 def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict:
@@ -184,6 +194,8 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
         answer = OUTPUT_BLOCKED_MESSAGE
         sources_sink = []  # drop citations for a blocked answer
         images_sink = []   # drop images for a blocked answer
+
+    answer = clean_markdown(answer)
 
     usage = getattr(final, "usage_metadata", None) or {}
     input_tokens = usage.get("input_tokens", 0)
