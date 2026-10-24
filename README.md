@@ -117,6 +117,19 @@ source .venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+### 4. Run docker
+
+```bash
+# Build docker
+docker compose up --build -d
+
+# Check log of agent and Zalo polling
+docker compose logs -f zalo-ai-agent
+# Then you can interact with agent through Zalo Bot
+
+# stop docker
+docker compose down
+```
 
 ## Configuration
 
