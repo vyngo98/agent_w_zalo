@@ -32,7 +32,7 @@ class RequestLog:
     latency_ms: float
     cache_hit: bool
     guardrail_input_pass: bool
-    guardrail_output_pass: bool
+    # guardrail_output_pass: bool
     cost_usd: float
     error: str | None = None
 

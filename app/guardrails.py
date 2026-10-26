@@ -40,9 +40,9 @@ BANNED_OUTPUT_PATTERNS = [
 # Canned refusals returned as the assistant turn when a guardrail blocks.
 INPUT_BLOCKED_MESSAGE = (
     "Yêu cầu của bạn chứa nội dung có thể là prompt injection nên đã bị chặn. "
-    "Vui lòng đặt lại câu hỏi về nội dung báo cáo tài chính.\n"
+    "Vui lòng đặt lại câu hỏi.\n"
     "(Your request was blocked as a potential prompt-injection attempt. "
-    "Please rephrase your question about the financial report.)"
+    "Please rephrase your question.)"
 )
 OUTPUT_BLOCKED_MESSAGE = (
     "Phản hồi đã bị chặn do chứa nội dung có khả năng không an toàn.\n"
@@ -71,6 +71,7 @@ def check_input_guardrails(text: str) -> GuardrailResult:
         if re.search(pattern, text):
             pii_found.append(pii_type)
 
+    # Redact text (if any PII was found) so PII is neither persisted on disk nor sent to the LLM.
     if pii_found:
         redacted = text
         for pii_type, pattern in PII_PATTERNS.items():

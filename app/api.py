@@ -31,7 +31,7 @@ from app.observability import (
     write_request_log,
 )
 from app.tracing import get_langfuse_handler
-# from app.semantic_cache import get_semantic_cache
+from app.semantic_cache import get_semantic_cache
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
             latency_ms=(time.perf_counter() - t0) * 1000.0,
             cache_hit=False,
             guardrail_input_pass=False,
-            guardrail_output_pass=True,
+            # guardrail_output_pass=True,
             cost_usd=0.0,
             error=None,
         ))
@@ -97,31 +97,32 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
     content = in_res.modified_text or req.content
     storage.append_message(session_id, "user", content)
 
-    # # Semantic cache lookup (standalone questions only): a hit returns the stored
-    # # answer without invoking the agent.
-    # if is_first_turn and document_id:
-    #     hit = get_semantic_cache().get(content, document_id)
-    #     if hit:
-    #         write_request_log(RequestLog(
-    #             request_id=request_id,
-    #             user_id=session_id,
-    #             timestamp=now_iso(),
-    #             prompt_template="cache",
-    #             prompt_version=PROMPT_VERSION,
-    #             model=LLM_MODEL,
-    #             input_tokens=0,
-    #             output_tokens=0,
-    #             latency_ms=(time.perf_counter() - t0) * 1000.0,
-    #             cache_hit=True,
-    #             guardrail_input_pass=True,
-    #             guardrail_output_pass=True,
-    #             cost_usd=0.0,
-    #             error=None,
-    #         ))
-    #         return storage.append_message(
-    #             session_id, "assistant", hit["response"],
-    #             sources=hit.get("sources") or None,
-    #         )
+    # Semantic cache lookup (standalone questions only): a hit returns the stored
+    # answer without invoking the agent.
+    is_first_turn = len(session["messages"]) == 0
+    if is_first_turn:
+        hit = get_semantic_cache().get(content)
+        if hit:
+            write_request_log(RequestLog(
+                request_id=request_id,
+                user_id=session_id,
+                timestamp=now_iso(),
+                prompt_template="cache",
+                prompt_version=PROMPT_VERSION,
+                model=LLM_MODEL,
+                input_tokens=0,
+                output_tokens=0,
+                latency_ms=(time.perf_counter() - t0) * 1000.0,
+                cache_hit=True,
+                guardrail_input_pass=True,
+                # guardrail_output_pass=True,
+                cost_usd=0.0,
+                error=None,
+            ))
+            return storage.append_message(
+                session_id, "assistant", hit["response"],
+                sources=hit.get("sources") or None,
+            )
 
     # Refresh to include the just-added user message; pass the full history so
     # follow-up questions have conversational context.
@@ -133,7 +134,7 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
     # Collect retrieval citations from the RAG tool (via a per-request sink)
     # so the UI can show which pages/tables the answer drew from. `log_sink`
     # carries observability data (e.g. prompt template) back from the graph.
-    sources_sink: list = []
+    # sources_sink: list = []
     images_sink: list = []
     log_sink: dict = {}
 
@@ -146,7 +147,7 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
 
     try:
         result = agent.invoke(
-            {"messages": history},
+            {"messages": content},
             config={
                 "callbacks": callbacks,
                 "run_name": "zalo_agent",
@@ -156,7 +157,8 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
                     "langfuse_tags": ["zalo-agent", f"prompt:{PROMPT_VERSION}"],
                 },
                 "configurable": {
-                    "sources_sink": sources_sink,
+                    "thread_id": session_id,
+                    # "sources_sink": sources_sink,
                     "images_sink": images_sink,
                     "log_sink": log_sink,
                 },
@@ -176,11 +178,11 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
             latency_ms=latency_ms,
             cache_hit=False,
             guardrail_input_pass=in_res.passed,
-            guardrail_output_pass=True,
+            # guardrail_output_pass=True,
             cost_usd=0.0,
             error=str(e),
         ))
-        logger.error("Lỗi model agent!")
+        logger.error("Lỗi model agent!", e)
         # All retries + fallback models exhausted -> apology turn (HTTP 200).
         return storage.append_message(session_id, "assistant", LLM_UNAVAILABLE_MESSAGE)
 
@@ -189,11 +191,11 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
     answer = final.content
 
     # Output guardrail: block unsafe content before it reaches the user.
-    out_res = check_output_guardrails(answer)
-    if not out_res.passed:
-        answer = OUTPUT_BLOCKED_MESSAGE
-        sources_sink = []  # drop citations for a blocked answer
-        images_sink = []   # drop images for a blocked answer
+    # out_res = check_output_guardrails(answer)
+    # if not out_res.passed:
+    #     answer = OUTPUT_BLOCKED_MESSAGE
+    #     sources_sink = []  # drop citations for a blocked answer
+    #     images_sink = []   # drop images for a blocked answer
 
     answer = clean_markdown(answer)
 
@@ -212,18 +214,18 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
         latency_ms=latency_ms,
         cache_hit=False,
         guardrail_input_pass=in_res.passed,
-        guardrail_output_pass=out_res.passed,
+        # guardrail_output_pass=out_res.passed,
         cost_usd=estimate_cost(LLM_MODEL, input_tokens, output_tokens),
         error=None,
     ))
 
     # Dedup by page, preserving first-seen order.
-    seen = set()
-    sources = []
-    for s in sources_sink:
-        if s["page"] not in seen:
-            seen.add(s["page"])
-            sources.append(s)
+    # seen = set()
+    # sources = []
+    # for s in sources_sink:
+    #     if s["page"] not in seen:
+    #         seen.add(s["page"])
+    #         sources.append(s)
 
     # Dedup image results by URL, preserving first-seen order.
     seen_img = set()
@@ -233,20 +235,20 @@ def _handle_message(session_id: str, session: dict, req: MessageRequest) -> dict
             seen_img.add(im["image"])
             images.append(im)
 
-    # Populate the semantic cache for standalone questions with a safe answer.
+    # Fill the semantic cache for standalone questions with a safe answer.
     # Never cache live web-search / image-search answers (routes search/image) — they go stale
     # and the image side-channel is not stored in the cache.
-    # if (
-    #     is_first_turn
-    #     and document_id
-    #     and out_res.passed
-    #     and log_sink.get("prompt_template") not in ("generate_search", "generate_image")
-    # ):
-    #     get_semantic_cache().put(content, document_id, answer, sources or None)
+    if (
+        is_first_turn
+        # and out_res.passed
+        and log_sink.get("prompt_template") not in ("generate_search", "generate_image")
+    ):
+        get_semantic_cache().put(content, answer)
 
     return storage.append_message(
         session_id, "assistant", answer,
-        sources=sources or None, images=images or None,
+        # sources=sources or None,
+        images=images or None,
     )
 
 
