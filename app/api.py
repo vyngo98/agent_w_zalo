@@ -7,12 +7,10 @@ from pydantic import BaseModel
 
 from app import storage
 from app.agent.lead_agent import create_custom_agent
-from app.config import LLM_MODEL, PROMPT_VERSION
+from app.config.config import LLM_MODEL, PROMPT_VERSION
 from app.guardrails import (
     INPUT_BLOCKED_MESSAGE,
-    OUTPUT_BLOCKED_MESSAGE,
     check_input_guardrails,
-    check_output_guardrails,
 )
 
 from app.integrations.zalo import (

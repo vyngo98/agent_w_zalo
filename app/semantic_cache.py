@@ -13,7 +13,7 @@ import math
 import os
 import time
 
-from app.config import (
+from app.config.config import (
     SEMANTIC_CACHE_MAX_ENTRIES,
     SEMANTIC_CACHE_PATH,
     SEMANTIC_CACHE_THRESHOLD,

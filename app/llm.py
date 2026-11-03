@@ -12,18 +12,10 @@ threadpool), so this avoids introducing asyncio.
 """
 
 import logging
-import random
-import time
+import os
 
-from app.config import (
-    # LLM_FALLBACK_MODELS,
-    # LLM_MAX_RETRIES,
-    LLM_MODEL,
-    # LLM_RETRY_BASE,
-    # LLM_RETRY_MAX_BACKOFF,
-    # LLM_TEMPERATURE,
-    # OLLAMA_BASE_URL,
-)
+from langchain_openai import ChatOpenAI
+from langchain_core.language_models import BaseChatModel
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +34,23 @@ class AllModelsFailedError(Exception):
 # Per-model client cache (ChatOllama is just an HTTP-client wrapper).
 _MODELS: dict = {}
 
+def create_chat_model(name: str | None = None) -> BaseChatModel:
+    """Create a chat model instance from the config.
+
+    Args:
+        name: The name of the model to create. If None, the first model in the config will be used.
+
+    Returns:
+        A chat model instance.
+    """
+    model = ChatOpenAI(
+        model=name,
+        api_key=os.getenv("9ROUTER_API_KEY"),
+        base_url=os.getenv("BASE_URL"),
+        temperature=0,
+    )
+
+    return model
 
 # def _get_chat_model(model_name: str):
 #     if model_name not in _MODELS:

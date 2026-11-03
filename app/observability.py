@@ -12,7 +12,7 @@ import os
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 
-from app.config import REQUEST_LOG_PATH
+from app.config.config import REQUEST_LOG_PATH
 
 
 def now_iso() -> str:

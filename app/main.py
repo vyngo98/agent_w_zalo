@@ -13,7 +13,7 @@ import time
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from app.config import ZALO_BOT_TOKEN, ZALO_ENABLE_POLLING, ZALO_POLL_TIMEOUT
+from app.config.config import ZALO_BOT_TOKEN, ZALO_ENABLE_POLLING, ZALO_POLL_TIMEOUT
 
 logger = logging.getLogger(__name__)
 

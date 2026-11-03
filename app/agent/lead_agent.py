@@ -11,18 +11,17 @@ from langchain.agents.middleware import ToolCallLimitMiddleware
 from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnableConfig
 
+from app.llm import create_chat_model
 from app.tools.image_search_tool import search_images
 from app.tools.web_search_tool import search_webs
 from app.prompts.system_prompt import SYSTEM_PROMPT
 
 from langgraph.store.memory import InMemoryStore
-from langchain.agents.middleware import (
-    AgentMiddleware,
-    ModelRequest,
-    ModelResponse,
-    SummarizationMiddleware,
-    ToolCallLimitMiddleware,
-)
+# from langchain.agents.middleware import (
+#     SummarizationMiddleware,
+#     ToolCallLimitMiddleware,
+# )
+from app.middlewares.build_middleware import build_lead_runtime_middlewares
 
 from app.middlewares.memory_middleware import LongTermMemoryMiddleware
 
@@ -63,19 +62,8 @@ class Context:
     user_id: str = "default"
 
 def create_custom_agent():
-    # temperature=0 giữ model ổn định/ít lan man -> hạn chế gọi lại tool một cách vô ích.
-    model = ChatOpenAI(
-        model="ag/gemini-3.8-flash-high",
-        api_key=os.getenv("9ROUTER_API_KEY"),
-        base_url=os.getenv("BASE_URL"),
-        temperature=0,
-    )
-    memory_model = ChatOpenAI(
-        model="ag/gemini-3.8-flash-low",
-        api_key=os.getenv("9ROUTER_API_KEY"),
-        base_url=os.getenv("BASE_URL"),
-        temperature=0,
-    )
+    model = create_chat_model("ag/gemini-3.8-flash-high")
+    memory_model = create_chat_model("ag/gemini-3.8-flash-low")
 
     # agent = create_agent(
     #     model=model,
@@ -113,25 +101,7 @@ def create_custom_agent():
              search_images],
         system_prompt=SYSTEM_PROMPT,
         context_schema=Context,
-        middleware=[
-            # --- WORKING MEMORY: tự tóm tắt khi hội thoại dài, giữ 20 message gần nhất
-            SummarizationMiddleware(
-                model=memory_model,
-                trigger=("tokens", 4000),
-                keep=("messages", 20),
-            ),
-            # --- SEMANTIC + EPISODIC + PROCEDURAL
-            LongTermMemoryMiddleware(
-                extractor_model=memory_model,
-                seed_rules=["Always cite the source when using web search results"],
-            ),
-            ToolCallLimitMiddleware(
-                tool_name="search_webs", run_limit=2, exit_behavior="continue"
-            ),
-            ToolCallLimitMiddleware(
-                tool_name="search_images", run_limit=2, exit_behavior="continue"
-            ),
-         ],
+        middleware=build_lead_runtime_middlewares(),
         checkpointer=InMemorySaver(),
         store=store,
         )

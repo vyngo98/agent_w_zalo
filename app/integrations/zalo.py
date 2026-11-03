@@ -5,7 +5,7 @@ import os
 
 import httpx
 
-from app.config import (
+from app.config.config import (
     ZALO_API_BASE,
     ZALO_BOT_TOKEN,
     ZALO_CHATS_PATH,

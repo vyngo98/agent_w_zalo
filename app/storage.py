@@ -3,7 +3,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 
-from app.config import DOCUMENTS_PATH, SESSIONS_DIR
+from app.config.config import SESSIONS_DIR
 
 
 def _now() -> str:

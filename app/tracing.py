@@ -11,7 +11,7 @@ tags) truyền qua `metadata` của config ở `app/api.py`.
 
 import logging
 
-from app.config import (
+from app.config.config import (
     LANGFUSE_ENABLED,
     LANGFUSE_HOST,
     LANGFUSE_PUBLIC_KEY,

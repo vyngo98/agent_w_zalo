@@ -14,7 +14,7 @@ import logging
 from langchain.tools import tool
 from langchain_core.runnables import RunnableConfig
 
-from app.config import (
+from app.config.config import (
     IMAGE_SEARCH_MAX_RESULTS,
     IMAGE_SEARCH_REGION,
     IMAGE_SEARCH_SAFESEARCH,

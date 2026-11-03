@@ -3,7 +3,7 @@ import logging
 from langchain.tools import tool
 from langchain_tavily import TavilySearch
 
-from app.config import (
+from app.config.config import (
     TAVILY_API_KEY
 )
 
